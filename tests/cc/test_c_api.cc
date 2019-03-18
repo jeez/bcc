@@ -138,13 +138,17 @@ static int mntns_func(void *arg) {
   char libpath[1024];
   ssize_t rb;
   void *dlhdl;
+#ifndef __ANDROID__
   struct link_map *lm;
+#endif
 
   if (setup_tmp_mnts() < 0) {
     return -1;
   }
 
-  // Find libz.so.1, if it's installed
+#ifdef __ANDROID__
+  strncpy(libpath, "/system/lib64/libz.so", 1024);  // Find libz.so.1, if it's installed
+#else
   dlhdl = dlopen("libz.so.1", RTLD_LAZY);
   if (dlhdl == NULL) {
     fprintf(stderr, "Unable to dlopen libz.so.1: %s\n", dlerror());
@@ -158,6 +162,7 @@ static int mntns_func(void *arg) {
 
   strncpy(libpath, lm->l_name, 1024);
   dlclose(dlhdl);
+#endif
   dlhdl = NULL;
 
   // Copy a shared library from shared mntns to private /tmp
